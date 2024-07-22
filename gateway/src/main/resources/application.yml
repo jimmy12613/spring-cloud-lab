@@ -1,0 +1,17 @@
+spring:
+  cloud:
+    config:
+      name: gateway
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+    import: configserver:http://127.0.0.1:8080
+
+---
+spring:
+  config:
+    activate:
+      on-profile: uat
+    import: configserver:http://config:8080

@@ -1,0 +1,6 @@
+rootProject.name = 'spring-cloud-lab'
+include 'gateway'
+include 'common'
+include 'auth'
+include 'eureka'
+include 'config'
