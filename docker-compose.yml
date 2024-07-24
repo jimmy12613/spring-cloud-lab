@@ -1,0 +1,90 @@
+version: '3.8'
+
+networks:
+  scl-public:
+    driver: bridge
+  scl-private:
+    driver: bridge
+
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: deploy/docker/gateway.Dockerfile
+    container_name: gateway
+    networks:
+      - scl-public
+      - scl-private
+    ports:
+      - "80:80"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+    depends_on:
+      config:
+        condition: service_healthy
+
+  config:
+    build:
+      context: .
+      dockerfile: deploy/docker/config.Dockerfile
+    container_name: config
+    networks:
+      - scl-private
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:8080/actuator/health | grep UP || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  eureka:
+    build:
+      context: .
+      dockerfile: deploy/docker/eureka.Dockerfile
+    container_name: eureka
+    networks:
+      - scl-public
+      - scl-private
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+    depends_on:
+      config:
+        condition: service_healthy
+
+  auth:
+    build:
+      context: .
+      dockerfile: deploy/docker/auth.Dockerfile
+    container_name: auth
+    networks:
+      - scl-private
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+    depends_on:
+      config:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:8.3.0
+    container_name: mysql
+    networks:
+      - scl-private
+    environment:
+      MYSQL_ROOT_PASSWORD: your_root_password
+      MYSQL_DATABASE: scl
+      MYSQL_USER: mysql
+      MYSQL_PASSWORD: your_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  mysql_data:
