@@ -1,7 +1,8 @@
 spring:
   cloud:
     config:
-      name: gateway
+      name: eureka-client, gateway
+
 ---
 spring:
   config:

@@ -20,7 +20,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
     depends_on:
-      config:
+      eureka:
         condition: service_healthy
 
   config:
@@ -47,6 +47,13 @@ services:
     networks:
       - scl-public
       - scl-private
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -fs http://localhost:8761/actuator/health | grep UP || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
     depends_on:
@@ -63,7 +70,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
     depends_on:
-      config:
+      eureka:
         condition: service_healthy
 
   mysql:
